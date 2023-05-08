@@ -15,6 +15,8 @@ private:
     void LocalOdom_pub();
     void update_odometry();
 
+    nav_msgs::msg::Odometry translate_odometry(nav_msgs::msg::Odometry::SharedPtr msg, double x, double y, double z);
+
     void callback_rangefinder(const sensor_msgs::msg::Range::SharedPtr msg);
     void callback_visual_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
     rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr rangefinder_sub_;
