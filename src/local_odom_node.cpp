@@ -1,5 +1,4 @@
 #include "tp_local_odom/local_odom_node.hpp"
-#include <tf2_ros/transform_listener.h>
 
 LocalOdomNode::LocalOdomNode(): Node("local_odom_node")
     {
@@ -38,6 +37,27 @@ void LocalOdomNode::update_odometry(){
 
     local_odom_pub_->publish(local_odometry);
 }
+nav_msgs::msg::Odometry LocalOdomNode::rotate_odometry(nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  // Create a transform stamped message to represent the rotation
+  geometry_msgs::msg::TransformStamped rotation_transform;
+  rotation_transform.header.stamp = msg->header.stamp;
+  rotation_transform.header.frame_id = "original_frame";
+  rotation_transform.child_frame_id = "rotated_frame";
+
+  // Set the rotation to a 90 degree roll around the X-axis
+  tf2::Quaternion rotation_quaternion;
+  rotation_quaternion.setRPY(M_PI/2.0, 0.0, 0.0); // 90 degree roll around the X-axis
+  rotation_transform.transform.rotation = tf2::toMsg(rotation_quaternion);
+
+  // Use the tf2 library to apply the rotation transform to the odometry message
+  nav_msgs::msg::Odometry rotated_odom;
+  tf2::doTransform(*msg, rotated_odom, rotation_transform);
+
+  // Return the rotated odometry message
+  return rotated_odom;
+}
+
 nav_msgs::msg::Odometry LocalOdomNode::translate_odometry(nav_msgs::msg::Odometry::SharedPtr msg, double x, double y, double z){
     nav_msgs::msg::Odometry updated_msg = *msg; // Make a new copy of the message
     updated_msg.pose.pose.position.x += x; // Update the copy with the desired translation in the x direction
@@ -45,6 +65,7 @@ nav_msgs::msg::Odometry LocalOdomNode::translate_odometry(nav_msgs::msg::Odometr
     updated_msg.pose.pose.position.z += z; // Update the copy with the desired translation in the z direction
     return updated_msg; // Return the updated copy
 }
+
 
 
 int main(int argc, char **argv)
