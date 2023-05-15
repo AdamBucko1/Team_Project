@@ -27,7 +27,7 @@ find_package(tf2_ros REQUIRED)
 
 
 
-add_executable(local_odom_node src/local_odom_node.cpp)
+#add_executable(local_odom_node src/local_odom_node.cpp)
 add_executable(test_node src/test_node.cpp)
 
 if(BUILD_TESTING)
@@ -41,7 +41,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_target_dependencies(local_odom_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
+#ament_target_dependencies(local_odom_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
 ament_target_dependencies(test_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
 
 include_directories(
@@ -49,7 +49,7 @@ include_directories(
 )
 
 install(TARGETS
-  local_odom_node
+ # local_odom_node
   test_node
   DESTINATION lib/${PROJECT_NAME}
 )
