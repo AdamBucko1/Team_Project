@@ -10,8 +10,7 @@
 #include <tf2_ros/buffer.h>
 #include <chrono>
 #include <memory>
-
-#include "/home/dfundo/tp_ros2_ws/install/interfaces/include/interfaces/srv/reset_odom.hpp"
+#include "interfaces/srv/reset_odom.hpp"
 
 class TfSubscriberNode: public rclcpp::Node // MODIFY NAME
 {
@@ -33,7 +32,6 @@ private:
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response);
     rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv;
-
 
 
 
