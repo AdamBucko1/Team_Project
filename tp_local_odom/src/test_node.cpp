@@ -17,7 +17,14 @@ void TfSubscriberNode::setup_subscriber(){
 
 void TfSubscriberNode::reset_odom_callback(
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
-      std::shared_ptr<interfaces::srv::ResetOdom::Response> response) {
+      std::shared_ptr<interfaces::srv::ResetOdom::Response> response) 
+      {
+
+        if (request->reset_odom=true)
+        {
+          std::cout<<"Reset request recieved, currently no code is written"<<std::endl;
+          response->success=true;
+        }
 
   }
 
