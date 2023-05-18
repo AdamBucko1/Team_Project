@@ -22,6 +22,7 @@ private:
     void global_odom_broadcast(const geometry_msgs::msg::TransformStamped& transform);
     void tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg);
     void setup_subscriber();
+    void base_camera_static_tf();
 
 
 
@@ -37,7 +38,7 @@ private:
 
 
 
-    tf2_ros::TransformBroadcaster tf_broadcaster_;
+    tf2_ros::StaticTransformBroadcaster tf_broadcaster_;
     std::string target_frame;
 
 

@@ -1,23 +1,12 @@
 #include "tp_local_odom/local_odom_node.hpp"
 
-LocalOdomNode::LocalOdomNode(): Node("local_odom_node"), tf_broadcaster_(this)
-    {
-
-
-        // this->InitListener();
-        // Declare and acquire `target_frame` parameter
-
-        tf_buffer =
-        std::make_unique<tf2_ros::Buffer>(this->get_clock());
-        tf_listener =
-        std::make_shared<tf2_ros::TransformListener>(*tf_buffer);
+LocalOdomNode::LocalOdomNode(): Node("local_odom_node"), node_(this), tf_broadcaster2(node_)
+{
         this->Rangefinder_sub();
         this->VisualOdom_sub();
         this->LocalOdom_pub();
-        this->broadcast_frame();
-
-
-    }
+        this->broadcast_frame()
+}
  
 void LocalOdomNode::Rangefinder_sub()
 {
@@ -32,13 +21,6 @@ void LocalOdomNode::VisualOdom_sub()
         "/ov9281_back/visual_odometry_imu/odom",3,
         std::bind(&LocalOdomNode::callback_visual_odom, this, std::placeholders::_1));
 }
-
-// void LocalOdomNode::InitListener(){
-//     tf_listener_ =
-//   std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
-// }
-
-
 
 
 void LocalOdomNode::LocalOdom_pub(){
@@ -75,32 +57,21 @@ void LocalOdomNode::broadcast_frame(){
 
         
         geometry_msgs::msg::TransformStamped rotation_transform;
-
-        geometry_msgs::msg::TransformStamped camera_transform =
-        
-
-            (*tf_buffer).lookupTransform("camera_link", "odom", tf2::TimePointZero);
-
-        // Copy the timestamp from the "camera_link" transform to the "drone_link" transform
-        rotation_transform.header.stamp = camera_transform.header.stamp;
-
-        // Create a transform stamped message to represent the rotation
-        
         // rotation_transform.header.stamp = this->now();
         rotation_transform.header.frame_id = "camera_link";// // rename parent acording drone ardupilot frame
         rotation_transform.child_frame_id = "drone_link"; // rename to the 
         //   set translation of frame
-        rotation_transform.transform.translation.x = 0.2;
+        rotation_transform.transform.translation.x = -0.14425;
         rotation_transform.transform.translation.y = 0.0;
         rotation_transform.transform.translation.z = 0.0;
 
         // Set the rotation to a 90 degree roll around the X-axis
         tf2::Quaternion rotation_quaternion;
-        rotation_quaternion.setRPY(0*M_PI/2.0, 0.0, 0.0); // 90 degree roll around the X-axis
+        rotation_quaternion.setRPY(0.0, 0.0, 0.0); // 90 degree roll around the X-axis
         rotation_transform.transform.rotation = tf2::toMsg(rotation_quaternion);
-        tf_broadcaster_.sendTransform(rotation_transform);
-        RCLCPP_INFO(this->get_logger(),"%f",camera_transform.header.stamp);
-        RCLCPP_INFO(this->get_logger(),"%s",camera_transform.header.stamp);
+        
+        tf_broadcaster2.sendTransform(rotation_transform);
+
 
         }
         catch(tf2::TransformException& ex){
