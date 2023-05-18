@@ -23,6 +23,7 @@ void TfSubscriberNode::reset_odom_callback(
         if (request->reset_odom=true)
         {
           std::cout<<"Reset request recieved, currently no code is written"<<std::endl;
+          tf_broadcaster_.sendTransform(global_local_tf);
           response->success=true;
         }
 
@@ -45,6 +46,7 @@ void TfSubscriberNode::setup_global_local_transform(){
       global_local_tf.transform.rotation.y = 0;
       global_local_tf.transform.rotation.z = 0;
       global_local_tf.transform.rotation.w = 1;
+      tf_broadcaster_.sendTransform(global_local_tf);
 }  
 
 void TfSubscriberNode::base_camera_static_tf(){
@@ -78,24 +80,34 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
 void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg){
 
   for (const auto& transform : msg->transforms) {
-    if (transform.child_frame_id == "drone_link") {
+    if (transform.child_frame_id == "camera_link") {
         global_local_tf.header.stamp = this->now();
-        global_local_tf.header.frame_id = "drone_link";
+        global_local_tf.header.frame_id = "map";
         global_local_tf.child_frame_id = "global_link";
-        global_local_tf.transform.translation.x = -transform.transform.translation.x;
-        global_local_tf.transform.translation.y = -transform.transform.translation.y;
-        global_local_tf.transform.translation.z = -transform.transform.translation.z;
+        // global_local_tf.transform.translation.x = -transform.transform.translation.x;
+        // global_local_tf.transform.translation.y = -transform.transform.translation.y;
+        // global_local_tf.transform.translation.z = -transform.transform.translation.z;
+        // tf2::Quaternion quat(
+        //     transform.transform.rotation.x,
+        //     transform.transform.rotation.y,
+        //     transform.transform.rotation.z,
+        //     transform.transform.rotation.w
+        // );
+        global_local_tf.transform.translation.x = 0;
+        global_local_tf.transform.translation.y = 0;
+        global_local_tf.transform.translation.z = 0;
         tf2::Quaternion quat(
-            global_local_tf.transform.rotation.x,
-            global_local_tf.transform.rotation.y,
-            global_local_tf.transform.rotation.z,
-            global_local_tf.transform.rotation.w
+            transform.transform.rotation.x,
+            transform.transform.rotation.y,
+            transform.transform.rotation.z,
+            transform.transform.rotation.w
         );
         tf2::Matrix3x3 mat(quat);
         double roll, pitch, yaw;
         mat.getRPY(roll, pitch, yaw);
         quat.setRPY(0.0, 0.0, -yaw);
         global_local_tf.transform.rotation = tf2::toMsg(quat);
+        //std::cout<<global_local_tf<<std::endl;
     }
     // if (transform.child_frame_id == "camera_link") {
       
