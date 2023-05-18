@@ -1,7 +1,8 @@
 #include "tp_local_odom/test_node.hpp"
 
 
-TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_(this)
+TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_(this), tf_buffer_(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME), tf2::durationFromSec(0)),
+      tf_listener_(tf_buffer_)
 {
   this->setup_subscriber();
   this->base_camera_static_tf();
@@ -22,7 +23,21 @@ void TfSubscriberNode::reset_odom_callback(
 
         if (request->reset_odom=true)
         {
+          try {
+            global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform(  "map", "drone_link",tf2::TimePointZero);
+          } catch (tf2::TransformException &ex) {
+            // Handle exception if the transform is not available
+            RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
+            return;
+          }
           std::cout<<"Reset request recieved, currently no code is written"<<std::endl;
+          // global_local_tf.transform.rotation.x = 0;
+          // global_local_tf.transform.rotation.y = 0;
+          // global_local_tf.transform.rotation.z = 0;
+          // global_local_tf.transform.rotation.w = 1;
+          global_local_tf.header.stamp = this->now();
+          global_local_tf.header.frame_id = "map";
+          global_local_tf.child_frame_id = "global_link";
           tf_broadcaster_.sendTransform(global_local_tf);
           response->success=true;
         }
@@ -79,11 +94,11 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
 
 void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg){
 
-  for (const auto& transform : msg->transforms) {
-    if (transform.child_frame_id == "camera_link") {
-        global_local_tf.header.stamp = this->now();
-        global_local_tf.header.frame_id = "map";
-        global_local_tf.child_frame_id = "global_link";
+  // for (const auto& transform : msg->transforms) {
+    // if (transform.child_frame_id == "camera_link") {
+        // global_local_tf.header.stamp = this->now();
+        // global_local_tf.header.frame_id = "map";
+        // global_local_tf.child_frame_id = "global_link";
         // global_local_tf.transform.translation.x = -transform.transform.translation.x;
         // global_local_tf.transform.translation.y = -transform.transform.translation.y;
         // global_local_tf.transform.translation.z = -transform.transform.translation.z;
@@ -93,22 +108,13 @@ void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg
         //     transform.transform.rotation.z,
         //     transform.transform.rotation.w
         // );
-        global_local_tf.transform.translation.x = 0;
-        global_local_tf.transform.translation.y = 0;
-        global_local_tf.transform.translation.z = 0;
-        tf2::Quaternion quat(
-            transform.transform.rotation.x,
-            transform.transform.rotation.y,
-            transform.transform.rotation.z,
-            transform.transform.rotation.w
-        );
-        tf2::Matrix3x3 mat(quat);
-        double roll, pitch, yaw;
-        mat.getRPY(roll, pitch, yaw);
-        quat.setRPY(0.0, 0.0, -yaw);
-        global_local_tf.transform.rotation = tf2::toMsg(quat);
+        // tf2::Matrix3x3 mat(quat);
+        // double roll, pitch, yaw;
+        // mat.getRPY(roll, pitch, yaw);
+        // quat.setRPY(0.0, 0.0, -yaw);
+        // global_local_tf.transform.rotation = tf2::toMsg(quat);
         //std::cout<<global_local_tf<<std::endl;
-    }
+    // }
     // if (transform.child_frame_id == "camera_link") {
       
     //   RCLCPP_INFO(get_logger(), "Transform from '%s' to '%s' with time stamp: %f", transform.header.frame_id.c_str(), transform.child_frame_id.c_str(), transform.header.stamp.sec + transform.header.stamp.nanosec / 1e9);
@@ -116,8 +122,8 @@ void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg
     //   // ardupilot_frame_broadcaster(transform);
     //   // global_odom_broadcast(transform);
     // }
-  }
-}
+  // }
+ }
 
 void TfSubscriberNode::ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform){
       geometry_msgs::msg::TransformStamped rotation_transform;
