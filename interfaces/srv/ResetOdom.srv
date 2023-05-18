@@ -1,0 +1,5 @@
+# Service for odometry reset
+bool reset_odom # True to start detection, False to stop
+---
+bool success        # True if request was successful, False otherwise
+

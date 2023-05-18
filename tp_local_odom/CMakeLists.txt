@@ -24,7 +24,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
-
+find_package(interfaces REQUIRED)
 
 
 #add_executable(local_odom_node src/local_odom_node.cpp)
@@ -42,7 +42,7 @@ if(BUILD_TESTING)
 endif()
 
 #ament_target_dependencies(local_odom_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
-ament_target_dependencies(test_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
+ament_target_dependencies(test_node rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
 
 include_directories(
   include
