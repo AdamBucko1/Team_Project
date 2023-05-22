@@ -94,7 +94,8 @@ void PoseRepublisher::vis_pose_callback(const geometry_msgs::msg::PoseStamped::S
     final_pose.pose.orientation.y = final_orientation_.getY();
     final_pose.pose.orientation.z = final_orientation_.getZ();
     final_pose.pose.orientation.w = final_orientation_.getW();
-
+    final_pose.header.frame_id = "drone";
+    final_pose.header.stamp = this->now();
     pose_publisher_->publish(final_pose);
 
  }
