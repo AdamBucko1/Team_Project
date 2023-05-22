@@ -30,6 +30,7 @@ find_package(interfaces REQUIRED)
 #add_executable(local_odom_node src/local_odom_node.cpp)
 add_executable(test_node src/test_node.cpp)
 add_executable(reset_odom_srv src/reset_odom_srv.cpp)
+add_executable(pose_republisher src/pose_republisher.cpp)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -45,6 +46,7 @@ endif()
 #ament_target_dependencies(local_odom_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
 ament_target_dependencies(test_node rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
 ament_target_dependencies(reset_odom_srv rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
+ament_target_dependencies(pose_republisher rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
 include_directories(
   include
 )
@@ -53,6 +55,7 @@ install(TARGETS
  # local_odom_node
   test_node
   reset_odom_srv
+  pose_republisher
   DESTINATION lib/${PROJECT_NAME}
 )
 
