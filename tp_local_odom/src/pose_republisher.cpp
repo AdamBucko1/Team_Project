@@ -48,4 +48,10 @@ void PoseRepublisher::vis_pose_callback(const geometry_msgs::msg::PointStamped::
 
 
  }
-
+int main(int argc, char** argv) {
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<PoseRepublisher>();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
+}
