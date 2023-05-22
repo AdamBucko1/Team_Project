@@ -18,12 +18,12 @@ public:
     TfSubscriberNode();
  
 private:
-    rclcpp::Subscription<tf2_msgs::msg::TFMessage>::SharedPtr subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscription_;
     //std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_ ;
 
     void ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform);
     void global_odom_broadcast(const geometry_msgs::msg::TransformStamped& transform);
-    void tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg);
+    void tf_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void setup_subscriber();
     void base_camera_static_tf();
     void setup_global_local_transform();

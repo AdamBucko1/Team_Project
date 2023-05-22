@@ -12,9 +12,11 @@ TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_
 }
 
 void TfSubscriberNode::setup_subscriber(){
-    subscription_ = create_subscription<tf2_msgs::msg::TFMessage>(
-        "/tf", rclcpp::SensorDataQoS(), std::bind(&TfSubscriberNode::tf_callback, this, std::placeholders::_1));
+    subscription_= create_subscription<geometry_msgs::msg::PoseStamped>(
+        "/visual_slam/tracking/vo_pose", rclcpp::SensorDataQoS(), std::bind(&TfSubscriberNode::tf_callback, this, std::placeholders::_1));
         }
+
+
 
 void TfSubscriberNode::reset_odom_callback(
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
@@ -93,58 +95,23 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
     tf_broadcaster_.sendTransform(transform);
 }
 
-void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg){
+void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
 geometry_msgs::msg::TransformStamped global_drone_tf;
-  for (const auto& transform : msg->transforms) {
-
-    if (transform.child_frame_id == "camera_link") {
-        try {
-            global_drone_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero);
-          } catch (tf2::TransformException &ex) {
-            // Handle exception if the transform is not available
-            RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
-            return;
-          }
-          // global_local_tf.transform.rotation.x = 0;
-          // global_local_tf.transform.rotation.y = 0;
-          // global_local_tf.transform.rotation.z = 0;
-          // global_local_tf.transform.rotation.w = 1;
-          global_drone_tf.header.stamp = this->now();
-          global_drone_tf.header.frame_id = "global_map_link";
-          global_drone_tf.child_frame_id = "drone_global";
-          tf_broadcaster_.sendTransform(global_drone_tf);
-
+  try {
+      global_drone_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero);
+    } catch (tf2::TransformException &ex) {
+      // Handle exception if the transform is not available
+      RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
+      return;
     }
-
-  // for (const auto& transform : msg->transforms) {
-    // if (transform.child_frame_id == "camera_link") {
-        // global_local_tf.header.stamp = this->now();
-        // global_local_tf.header.frame_id = "map";
-        // global_local_tf.child_frame_id = "global_link";
-        // global_local_tf.transform.translation.x = -transform.transform.translation.x;
-        // global_local_tf.transform.translation.y = -transform.transform.translation.y;
-        // global_local_tf.transform.translation.z = -transform.transform.translation.z;
-        // tf2::Quaternion quat(
-        //     transform.transform.rotation.x,
-        //     transform.transform.rotation.y,
-        //     transform.transform.rotation.z,
-        //     transform.transform.rotation.w
-        // );
-        // tf2::Matrix3x3 mat(quat);
-        // double roll, pitch, yaw;
-        // mat.getRPY(roll, pitch, yaw);
-        // quat.setRPY(0.0, 0.0, -yaw);
-        // global_local_tf.transform.rotation = tf2::toMsg(quat);
-        //std::cout<<global_local_tf<<std::endl;
-    // }
-    // if (transform.child_frame_id == "camera_link") {
-      
-    //   RCLCPP_INFO(get_logger(), "Transform from '%s' to '%s' with time stamp: %f", transform.header.frame_id.c_str(), transform.child_frame_id.c_str(), transform.header.stamp.sec + transform.header.stamp.nanosec / 1e9);
-    //   RCLCPP_INFO(get_logger(), "Received transform message with time stamp:%s:  %f",transform.child_frame_id, transform.header.stamp.sec + transform.header.stamp.nanosec / 1e9);
-    //   // ardupilot_frame_broadcaster(transform);
-    //   // global_odom_broadcast(transform);
-    // }
-   }
+    // global_local_tf.transform.rotation.x = 0;
+    // global_local_tf.transform.rotation.y = 0;
+    // global_local_tf.transform.rotation.z = 0;
+    // global_local_tf.transform.rotation.w = 1;
+    global_drone_tf.header.stamp = this->now();
+    global_drone_tf.header.frame_id = "global_map_link";
+    global_drone_tf.child_frame_id = "drone_global";
+    tf_broadcaster_.sendTransform(global_drone_tf);
  }
 
 void TfSubscriberNode::ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform){
