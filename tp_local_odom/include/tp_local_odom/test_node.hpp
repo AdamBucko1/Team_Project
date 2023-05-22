@@ -28,11 +28,15 @@ private:
     void base_camera_static_tf();
     void setup_global_local_transform();
     void reset_srv_handle();
+    void GlobalOdom_pub();
+    void LocalOdom_pub();
     void reset_odom_callback(
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response);
     rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv;
-
+    
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr local_odom_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr global_odom_pub_;
 
 
 
@@ -52,7 +56,7 @@ private:
 
     void Rangefinder_sub();
     void VisualOdom_sub();
-    void LocalOdom_pub();
+
     void update_odometry();
     void InitListener();
     void broadcast_frame();
@@ -68,6 +72,6 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr rangefinder_sub_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr visual_odom_sub_;
 
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr local_odom_pub_;
+
 };
 
