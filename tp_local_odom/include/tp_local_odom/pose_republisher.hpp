@@ -20,5 +20,9 @@ public:
 
  
 private:
-
-};
+    void Init();
+    void DefaultValues();
+    void SetupSubscribers();
+    void SetupPublishers();
+    void SetupServices();
+}
