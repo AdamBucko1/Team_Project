@@ -21,7 +21,7 @@ void TfSubscriberNode::reset_odom_callback(
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response) 
       {
 
-        if (request->reset_odom=true)
+        if (request->reset_odom==true)
         {
           try {
             global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero);
@@ -93,6 +93,28 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
 }
 
 void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg){
+geometry_msgs::msg::TransformStamped global_drone_tf;
+  for (const auto& transform : msg->transforms) {
+
+    if (transform.child_frame_id == "camera_link") {
+        try {
+            global_drone_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero);
+          } catch (tf2::TransformException &ex) {
+            // Handle exception if the transform is not available
+            RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
+            return;
+          }
+          std::cout<<"Reset request recieved, currently no code is written"<<std::endl;
+          // global_local_tf.transform.rotation.x = 0;
+          // global_local_tf.transform.rotation.y = 0;
+          // global_local_tf.transform.rotation.z = 0;
+          // global_local_tf.transform.rotation.w = 1;
+          global_drone_tf.header.stamp = this->now();
+          global_drone_tf.header.frame_id = "global_map_link";
+          global_drone_tf.child_frame_id = "drone_global";
+          tf_broadcaster_.sendTransform(global_drone_tf);
+
+    }
 
   // for (const auto& transform : msg->transforms) {
     // if (transform.child_frame_id == "camera_link") {
@@ -122,7 +144,7 @@ void TfSubscriberNode::tf_callback(const tf2_msgs::msg::TFMessage::SharedPtr msg
     //   // ardupilot_frame_broadcaster(transform);
     //   // global_odom_broadcast(transform);
     // }
-  // }
+   }
  }
 
 void TfSubscriberNode::ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform){
