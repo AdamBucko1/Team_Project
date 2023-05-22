@@ -25,7 +25,6 @@ void TfSubscriberNode::reset_odom_callback(
         {
           try {
             global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero);
-            global_odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero);
           } catch (tf2::TransformException &ex) {
             // Handle exception if the transform is not available
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());

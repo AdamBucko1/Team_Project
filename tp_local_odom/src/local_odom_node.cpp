@@ -5,7 +5,7 @@ LocalOdomNode::LocalOdomNode(): Node("local_odom_node"), node_(this), tf_broadca
         this->Rangefinder_sub();
         this->VisualOdom_sub();
         this->LocalOdom_pub();
-        this->broadcast_frame()
+        this->broadcast_frame();
 }
  
 void LocalOdomNode::Rangefinder_sub()

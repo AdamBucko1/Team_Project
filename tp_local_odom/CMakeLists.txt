@@ -25,6 +25,8 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(interfaces REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 
 #add_executable(local_odom_node src/local_odom_node.cpp)
@@ -44,10 +46,11 @@ if(BUILD_TESTING)
 endif()
 
 #ament_target_dependencies(local_odom_node rclcpp sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros) 
-ament_target_dependencies(test_node rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
-ament_target_dependencies(reset_odom_srv rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
-ament_target_dependencies(pose_republisher rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces) 
+ament_target_dependencies(test_node rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces Eigen3) 
+ament_target_dependencies(reset_odom_srv rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces Eigen3) 
+ament_target_dependencies(pose_republisher rclcpp  sensor_msgs nav_msgs geometry_msgs tf2_geometry_msgs tf2 tf2_ros interfaces Eigen3) 
 include_directories(
+  ${EIGEN3_INCLUDE_DIR}
   include
 )
 
