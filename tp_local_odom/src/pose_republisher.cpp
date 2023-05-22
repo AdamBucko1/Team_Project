@@ -65,8 +65,9 @@ void PoseRepublisher::vis_pose_callback(const geometry_msgs::msg::PoseStamped::S
     tf2::Vector3 position_orig, position_world, final_position_;
     tf2::Quaternion quat_orig, quat_body_to_world, quat_world, quat_cam_to_body, quat_cam_to_world, final_orientation_;
 
-    tf2::fromMsg(msg->pose.position, position_orig);
-    tf2::fromMsg(msg->pose.orientation, quat_orig);
+    position_orig.setValue(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+    quat_orig.setValue(msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
+    
     quat_body_to_world.setRPY(0, 0, -gamma_world_);
     quat_cam_to_body.setRPY(roll_camera_, pitch_camera_, yaw_camera_);
     quat_cam_to_world = quat_orig.inverse() * quat_body_to_world * quat_orig * quat_cam_to_body;
