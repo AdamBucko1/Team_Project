@@ -10,6 +10,7 @@
 #include <chrono>
 #include <memory>
 #include "interfaces/srv/reset_odom.hpp"
+#include <geometry_msgs/msg/point.hpp>
 
 class PoseRepublisher : public rclcpp::Node // MODIFY NAME
 {
