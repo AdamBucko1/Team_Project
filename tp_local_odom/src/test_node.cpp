@@ -101,7 +101,7 @@ geometry_msgs::msg::TransformStamped global_drone_tf;
       global_drone_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero);
     } catch (tf2::TransformException &ex) {
       // Handle exception if the transform is not available
-      RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
+      // RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
       return;
     }
     // global_local_tf.transform.rotation.x = 0;
@@ -112,6 +112,8 @@ geometry_msgs::msg::TransformStamped global_drone_tf;
     global_drone_tf.header.frame_id = "global_map_link";
     global_drone_tf.child_frame_id = "drone_global";
     tf_broadcaster_.sendTransform(global_drone_tf);
+
+
  }
 
 void TfSubscriberNode::ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform){
