@@ -24,7 +24,8 @@ void TfSubscriberNode::reset_odom_callback(
         if (request->reset_odom=true)
         {
           try {
-            global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform(  "map", "drone_link",tf2::TimePointZero);
+            global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero);
+            global_odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero);
           } catch (tf2::TransformException &ex) {
             // Handle exception if the transform is not available
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
@@ -37,7 +38,7 @@ void TfSubscriberNode::reset_odom_callback(
           // global_local_tf.transform.rotation.w = 1;
           global_local_tf.header.stamp = this->now();
           global_local_tf.header.frame_id = "map";
-          global_local_tf.child_frame_id = "global_link";
+          global_local_tf.child_frame_id = "global_map_link";
           tf_broadcaster_.sendTransform(global_local_tf);
           response->success=true;
         }
@@ -53,7 +54,7 @@ void TfSubscriberNode::reset_srv_handle(){
 void TfSubscriberNode::setup_global_local_transform(){
       global_local_tf.header.stamp = this->now();
       global_local_tf.header.frame_id = "drone_link";
-      global_local_tf.child_frame_id = "global_link";
+      global_local_tf.child_frame_id = "global_map_link";
       global_local_tf.transform.translation.x = 0;
       global_local_tf.transform.translation.y = 0;
       global_local_tf.transform.translation.z = 0;
