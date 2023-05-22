@@ -25,4 +25,13 @@ private:
     void SetupSubscribers();
     void SetupPublishers();
     void SetupServices();
-}
+    void reset_srv_handle();
+    void reset_odom_callback(
+      const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
+      std::shared_ptr<interfaces::srv::ResetOdom::Response> response);
+    rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv;
+
+    rclcpp::Subscription<geometry_msgs::msg::PointStamped>::SharedPtr subscription_;
+    void vis_pose_callback(const geometry_msgs::msg::PointStamped::SharedPtr msg);
+
+};
