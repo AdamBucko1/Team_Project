@@ -30,6 +30,7 @@ void TfSubscriberNode::reset_odom_callback(
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
             return;
           }
+
           std::cout<<"Reset request recieved, currently no code is written"<<std::endl;
           // global_local_tf.transform.rotation.x = 0;
           // global_local_tf.transform.rotation.y = 0;
@@ -52,7 +53,7 @@ void TfSubscriberNode::reset_srv_handle(){
 
 void TfSubscriberNode::setup_global_local_transform(){
       global_local_tf.header.stamp = this->now();
-      global_local_tf.header.frame_id = "drone_link";
+      global_local_tf.header.frame_id = "map";
       global_local_tf.child_frame_id = "global_map_link";
       global_local_tf.transform.translation.x = 0;
       global_local_tf.transform.translation.y = 0;
@@ -76,7 +77,7 @@ void TfSubscriberNode::base_camera_static_tf(){
     rotation_transform.header.frame_id = "camera_link";// // rename parent acording drone ardupilot frame
     rotation_transform.child_frame_id = "drone_link"; // rename to the 
     //   set translation of frame
-    rotation_transform.transform.translation.x = -0.14425;
+    rotation_transform.transform.translation.x = -0.13;  //-0.14425
     rotation_transform.transform.translation.y = 0.0;
     rotation_transform.transform.translation.z = 0.0;
 
@@ -104,7 +105,6 @@ geometry_msgs::msg::TransformStamped global_drone_tf;
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
             return;
           }
-          std::cout<<"Reset request recieved, currently no code is written"<<std::endl;
           // global_local_tf.transform.rotation.x = 0;
           // global_local_tf.transform.rotation.y = 0;
           // global_local_tf.transform.rotation.z = 0;
@@ -159,7 +159,7 @@ void TfSubscriberNode::ardupilot_frame_broadcaster(const geometry_msgs::msg::Tra
       rotation_transform.header.frame_id = "camera_link";// // rename parent acording drone ardupilot frame
       rotation_transform.child_frame_id = "ardupilot_link"; // rename to the 
       //   set translation of frame
-      rotation_transform.transform.translation.x = -0.14425;
+      rotation_transform.transform.translation.x = -0.13; // -0.14425;
       rotation_transform.transform.translation.y = 0.0;
       rotation_transform.transform.translation.z = 0.0;
 
