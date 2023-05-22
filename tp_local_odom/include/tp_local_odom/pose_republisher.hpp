@@ -10,3 +10,15 @@
 #include <chrono>
 #include <memory>
 #include "interfaces/srv/reset_odom.hpp"
+
+class PoseRepublisher : public rclcpp::Node // MODIFY NAME
+{
+public:
+
+    PoseRepublisher();
+
+
+ 
+private:
+
+};
