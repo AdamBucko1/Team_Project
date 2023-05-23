@@ -77,7 +77,7 @@ void TfSubscriberNode::setup_global_local_transform(){
       geometry_msgs::msg::TransformStamped global_drone_tf;
       global_drone_tf.header.stamp = this->now();
       global_drone_tf.header.frame_id = "global_map_link";
-      global_drone_tf.child_frame_id = "global_drone";
+      global_drone_tf.child_frame_id = "drone_global";
       global_drone_tf.transform.translation.x = 0;
       global_drone_tf.transform.translation.y = 0;
       global_drone_tf.transform.translation.z = 0;
