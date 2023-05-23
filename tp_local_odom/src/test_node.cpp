@@ -73,6 +73,21 @@ void TfSubscriberNode::setup_global_local_transform(){
       global_local_tf.transform.rotation.z = 0;
       global_local_tf.transform.rotation.w = 1;
       tf_broadcaster_.sendTransform(global_local_tf);
+
+      geometry_msgs::msg::TransformStamped global_drone_tf;
+      global_drone_tf.header.stamp = this->now();
+      global_drone_tf.header.frame_id = "global_map_link";
+      global_drone_tf.child_frame_id = "global_drone";
+      global_drone_tf.transform.translation.x = 0;
+      global_drone_tf.transform.translation.y = 0;
+      global_drone_tf.transform.translation.z = 0;
+      global_drone_tf.transform.rotation.x = 0;
+      global_drone_tf.transform.rotation.y = 0;
+      global_drone_tf.transform.rotation.z = 0;
+      global_drone_tf.transform.rotation.w = 1;
+      tf_broadcaster_.sendTransform(global_drone_tf);
+
+
 }  
 
 void TfSubscriberNode::base_camera_static_tf(){
@@ -105,7 +120,7 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
 
 void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
   geometry_msgs::msg::TransformStamped global_odom_tf;
-geometry_msgs::msg::TransformStamped odom_tf;
+  geometry_msgs::msg::TransformStamped odom_tf;
   try {
       odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero, tf2::durationFromSec(0.041));
     } catch (tf2::TransformException &ex) {
