@@ -10,6 +10,8 @@ TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_
   this->base_camera_static_tf();
   this->setup_global_local_transform();
   this->reset_srv_handle();
+  tf_buffer_.setUsingDedicatedThread(true);  // Optional, for better performance
+  
   
 }
 
@@ -32,7 +34,7 @@ void TfSubscriberNode::reset_odom_callback(
         if (request->reset_odom==true)
         {
           try {
-            global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero);
+            global_local_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "drone_link","map",tf2::TimePointZero, tf2::durationFromSec(0.041));
           } catch (tf2::TransformException &ex) {
             // Handle exception if the transform is not available
             RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
@@ -105,7 +107,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
   geometry_msgs::msg::TransformStamped global_odom_tf;
 geometry_msgs::msg::TransformStamped odom_tf;
   try {
-      odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero);
+      odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero, tf2::durationFromSec(0.041));
     } catch (tf2::TransformException &ex) {
       // Handle exception if the transform is not available
       // RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
@@ -121,7 +123,7 @@ geometry_msgs::msg::TransformStamped odom_tf;
     tf_broadcaster_.sendTransform(odom_tf);
 
   try {
-    global_odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_global",tf2::TimePointZero);
+    global_odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_global",tf2::TimePointZero, tf2::durationFromSec(0.041));
     }
     catch (tf2::TransformException &ex) {
       // Handle exception if the transform is not available
