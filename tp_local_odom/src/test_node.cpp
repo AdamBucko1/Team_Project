@@ -20,7 +20,7 @@ void TfSubscriberNode::setup_subscriber(){
         "/visual_slam/tracking/vo_pose", rclcpp::SensorDataQoS(), std::bind(&TfSubscriberNode::tf_callback, this, std::placeholders::_1));
         }
 void TfSubscriberNode::LocalOdom_pub(){
-    local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("team_project/local_position/pose",10); 
+    local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("mavros/mocap/pose",10); 
 }
 void TfSubscriberNode::GlobalOdom_pub(){
     global_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("team_project/global_position/pose",10); 
