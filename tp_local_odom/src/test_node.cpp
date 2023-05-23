@@ -134,8 +134,11 @@ geometry_msgs::msg::TransformStamped odom_tf;
     geometry_msgs::msg::PoseStamped local_pose;
     geometry_msgs::msg::PoseStamped global_pose;
 
-    local_pose.header = odom_tf.header;
-    global_pose.header = global_odom_tf.header;
+    local_pose.header.stamp = odom_tf.header.stamp;
+    local_pose.header.frame_id="map";
+
+    global_pose.header.stamp = odom_tf.header.stamp;
+    global_pose.header.frame_id="map";
 
 
 
