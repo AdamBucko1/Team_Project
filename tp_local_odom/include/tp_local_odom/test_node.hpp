@@ -43,7 +43,7 @@ private:
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
 
-
+   
 
 
 
@@ -52,8 +52,10 @@ private:
     geometry_msgs::msg::TransformStamped global_local_tf;
     tf2_ros::StaticTransformBroadcaster tf_broadcaster_;
     std::string target_frame;
-
-
+    double rangefinder_vis_range_info=0;
+    double range_visual=0;
+    double corrected_range=0;
+    double last_range=0;
     void Rangefinder_sub();
     void VisualOdom_sub();
 

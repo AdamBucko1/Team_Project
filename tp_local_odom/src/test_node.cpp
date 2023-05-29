@@ -5,6 +5,7 @@ TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_
       tf_listener_(tf_buffer_)
 {
   this->LocalOdom_pub();
+  this->Rangefinder_sub();
   this->GlobalOdom_pub();
   this->setup_subscriber();
   this->base_camera_static_tf();
@@ -19,11 +20,29 @@ void TfSubscriberNode::setup_subscriber(){
     subscription_= create_subscription<geometry_msgs::msg::PoseStamped>(
         "/visual_slam/tracking/vo_pose", rclcpp::SensorDataQoS(), std::bind(&TfSubscriberNode::tf_callback, this, std::placeholders::_1));
         }
+
+void TfSubscriberNode::Rangefinder_sub()
+{
+    rangefinder_sub_=this->create_subscription<sensor_msgs::msg::Range>(
+        "/mavros/rangefinder/rangefinder",3,
+        std::bind(&TfSubscriberNode::callback_rangefinder, this, std::placeholders::_1));
+}
+
+void TfSubscriberNode::callback_rangefinder(const sensor_msgs::msg::Range::SharedPtr msg){
+  if (msg->range == 0.0){
+  corrected_range = last_range+rangefinder_vis_range_info-range_visual;
+  last_range=corrected_range;
+  }
+  else{
+  rangefinder_vis_range_info=range_visual;
+  last_range = msg->range;
+  }
+}
 void TfSubscriberNode::LocalOdom_pub(){
-    local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("team_project/local_position/pose",10); 
+    local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("mavros/mocap/pose",10); 
 }
 void TfSubscriberNode::GlobalOdom_pub(){
-    global_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("team_project/global_position/pose",10); 
+    global_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("global_pose",10); 
 }
 
 void TfSubscriberNode::reset_odom_callback(
@@ -119,6 +138,7 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
 }
 
 void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
+  double range_visual= msg->pose.position.z;
   geometry_msgs::msg::TransformStamped global_odom_tf;
   geometry_msgs::msg::TransformStamped odom_tf;
   try {
@@ -161,7 +181,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
     // Position transformation
     local_pose.pose.position.x = -odom_tf.transform.translation.y;
     local_pose.pose.position.y = odom_tf.transform.translation.x;
-    local_pose.pose.position.z = odom_tf.transform.translation.z;
+    local_pose.pose.position.z = last_range;
 
     // Quaternion transformation
     tf2::Quaternion localQ(
@@ -182,7 +202,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
         // Position transformation
     global_pose.pose.position.x = -global_odom_tf.transform.translation.y;
     global_pose.pose.position.y = global_odom_tf.transform.translation.x;
-    global_pose.pose.position.z = global_odom_tf.transform.translation.z;
+    global_pose.pose.position.z = last_range;
 
     // Quaternion transformation
     tf2::Quaternion globalQ(
