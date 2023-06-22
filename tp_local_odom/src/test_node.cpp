@@ -11,9 +11,7 @@ TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_
   this->base_camera_static_tf();
   this->setup_global_local_transform();
   this->reset_srv_handle();
-  tf_buffer_.setUsingDedicatedThread(true);  // Optional, for better performance
-  
-  
+  tf_buffer_.setUsingDedicatedThread(true);  // Optional, for better performance    
 }
 
 void TfSubscriberNode::setup_subscriber(){
@@ -22,9 +20,9 @@ void TfSubscriberNode::setup_subscriber(){
         }
 
 void TfSubscriberNode::Rangefinder_sub()
-{
+{//" /mavros/rangefinder/rangefinder
     rangefinder_sub_=this->create_subscription<sensor_msgs::msg::Range>(
-        "/mavros/rangefinder/rangefinder",3,
+        "/aeros/rangefinder",3,
         std::bind(&TfSubscriberNode::callback_rangefinder, this, std::placeholders::_1));
 }
 
@@ -39,7 +37,9 @@ void TfSubscriberNode::callback_rangefinder(const sensor_msgs::msg::Range::Share
   }
 }
 void TfSubscriberNode::LocalOdom_pub(){
-    local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("mavros/mocap/pose",10); 
+                                                                              //"" /mavros/mocap/pose
+  local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/aeros/vision_odom/pose",10); 
+    
 }
 void TfSubscriberNode::GlobalOdom_pub(){
     global_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("global_pose",10); 
@@ -177,7 +177,6 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
 
 
 
-/////////////////////////////////////TF-NWU --> POSE-ENU///////////////////////////////////////////////
     // Position transformation
     local_pose.pose.position.x = -odom_tf.transform.translation.y;
     local_pose.pose.position.y = odom_tf.transform.translation.x;
@@ -191,64 +190,55 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
         odom_tf.transform.rotation.w
     );
     tf2::Quaternion transformQ;
-    transformQ.setRPY(M_PI, 0, -M_PI / 2); // Rotate around X by 180 degrees
+    transformQ.setRPY(0, 0, -M_PI / 2);
 
-    tf2::Quaternion enuLocalQ = transformQ * localQ;    
-    local_pose.pose.orientation.x = enuLocalQ.x();
-    local_pose.pose.orientation.y = enuLocalQ.y();
-    local_pose.pose.orientation.z = enuLocalQ.z();
-    local_pose.pose.orientation.w = enuLocalQ.w();
+    tf2::Quaternion enuLocalQ = transformQ * localQ;
+
+    // Swap roll and pitch
+    double roll, pitch, yaw;
+    tf2::Matrix3x3(enuLocalQ).getRPY(roll, pitch, yaw);
+    double temp = roll;
+    roll = pitch;
+    pitch = temp;
+
+    // Add minus sign to roll
+    roll = -roll;
+
+    // Convert back to quaternion
+    tf2::Quaternion correctedQ;
+    correctedQ.setRPY(roll, pitch, yaw);
+
+    local_pose.pose.orientation.x = correctedQ.x();
+    local_pose.pose.orientation.y = correctedQ.y();
+    local_pose.pose.orientation.z = correctedQ.z();
+    local_pose.pose.orientation.w = correctedQ.w();
     ///////////////////////////////////TF-NWU --> POSE-ENU/////////////////////////////////////////////////
-        // Position transformation
-    global_pose.pose.position.x = -global_odom_tf.transform.translation.y;
-    global_pose.pose.position.y = global_odom_tf.transform.translation.x;
-    global_pose.pose.position.z = last_range;
+    //     // Position transformation
+    // global_pose.pose.position.x = -global_odom_tf.transform.translation.y;
+    // global_pose.pose.position.y = global_odom_tf.transform.translation.x;
+    // global_pose.pose.position.z = last_range;
 
-    // Quaternion transformation
-    tf2::Quaternion globalQ(
-        global_odom_tf.transform.rotation.x,
-        global_odom_tf.transform.rotation.y,
-        global_odom_tf.transform.rotation.z,
-        global_odom_tf.transform.rotation.w
-    );
-    tf2::Quaternion enuGlobalQ = transformQ * globalQ;
+    // // Quaternion transformation
+    // tf2::Quaternion globalQ(
+    //     global_odom_tf.transform.rotation.x,
+    //     global_odom_tf.transform.rotation.y,
+    //     global_odom_tf.transform.rotation.z,
+    //     global_odom_tf.transform.rotation.w
+    // );
+    // tf2::Quaternion enuGlobalQ = transformQ * globalQ;
 
-    global_pose.pose.orientation.x = enuGlobalQ.x();
-    global_pose.pose.orientation.y = enuGlobalQ.y();
-    global_pose.pose.orientation.z = enuGlobalQ.z();
-    global_pose.pose.orientation.w = enuGlobalQ.w();
+    // global_pose.pose.orientation.x = enuGlobalQ.x();
+    // global_pose.pose.orientation.y = enuGlobalQ.y();
+    // global_pose.pose.orientation.z = enuGlobalQ.z();
+    // global_pose.pose.orientation.w = enuGlobalQ.w();
     ///////////////////////////////////////////////////////////////////////////////////
   try{
-    global_odom_pub_->publish(global_pose);
+    // global_odom_pub_->publish(global_pose);
     local_odom_pub_->publish(local_pose);
     }
     catch (const std::exception &e) {
     std::cerr << "Caught a standard exception: " << e.what() << std::endl;
-}
-
- }
-
-void TfSubscriberNode::ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform){
-      geometry_msgs::msg::TransformStamped rotation_transform;
-
-      // Copy the timestamp from the "camera_link" transform to the "drone_link" transform
-      rotation_transform.header.stamp = transform.header.stamp;
-
-      // Create a transform stamped message to represent the rotation
-      
-      // rotation_transform.header.stamp = this->now();
-      rotation_transform.header.frame_id = "camera_link";// // rename parent acording drone ardupilot frame
-      rotation_transform.child_frame_id = "ardupilot_link"; // rename to the 
-      //   set translation of frame
-      rotation_transform.transform.translation.x = -0.13; // -0.14425;
-      rotation_transform.transform.translation.y = 0.0;
-      rotation_transform.transform.translation.z = 0.0;
-
-      // Set the rotation to a 90 degree roll around the X-axis
-      tf2::Quaternion rotation_quaternion;
-      rotation_quaternion.setRPY(0, 0.0, 0.0); // 90 degree roll around the X-axis
-      rotation_transform.transform.rotation = tf2::toMsg(rotation_quaternion);
-      tf_broadcaster_.sendTransform(rotation_transform);
+    }
 }
 
 int main(int argc, char** argv) {
