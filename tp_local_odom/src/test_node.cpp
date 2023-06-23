@@ -15,8 +15,8 @@ TfSubscriberNode::TfSubscriberNode(): Node("tf_subscriber_node"),tf_broadcaster_
 }
 
 void TfSubscriberNode::setup_subscriber(){
-    subscription_= create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/visual_slam/tracking/vo_pose", rclcpp::SensorDataQoS(), std::bind(&TfSubscriberNode::tf_callback, this, std::placeholders::_1));
+    subscription_= create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+        "/visual_slam/tracking/vo_pose_covariance", rclcpp::SensorDataQoS(), std::bind(&TfSubscriberNode::tf_callback, this, std::placeholders::_1));
         }
 
 void TfSubscriberNode::Rangefinder_sub()
@@ -38,7 +38,7 @@ void TfSubscriberNode::callback_rangefinder(const sensor_msgs::msg::Range::Share
 }
 void TfSubscriberNode::LocalOdom_pub(){
                                                                               //"" /mavros/mocap/pose
-  local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/aeros/vision_odom/pose",10); 
+  local_odom_pub_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/aeros/vision_odom/pose",10); 
     
 }
 void TfSubscriberNode::GlobalOdom_pub(){
@@ -137,8 +137,8 @@ void TfSubscriberNode::global_odom_broadcast(const geometry_msgs::msg::Transform
     tf_broadcaster_.sendTransform(transform);
 }
 
-void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
-  double range_visual= msg->pose.position.z;
+void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg){
+  double range_visual= msg->pose.pose.position.z;
   geometry_msgs::msg::TransformStamped global_odom_tf;
   geometry_msgs::msg::TransformStamped odom_tf;
   try {
@@ -167,6 +167,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
     }
     // Position transformation from NWU to ENU
     geometry_msgs::msg::PoseStamped local_pose;
+    geometry_msgs::msg::PoseWithCovarianceStamped local_pose_with_covariance;
     geometry_msgs::msg::PoseStamped global_pose;
 
     local_pose.header.stamp = odom_tf.header.stamp;
@@ -180,7 +181,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
     // Position transformation
     local_pose.pose.position.x = -odom_tf.transform.translation.y;
     local_pose.pose.position.y = odom_tf.transform.translation.x;
-    local_pose.pose.position.z = last_range;
+    local_pose.pose.position.z = last_range-0.075;
 
     // Quaternion transformation
     tf2::Quaternion localQ(
@@ -232,9 +233,14 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseStamped::Shared
     // global_pose.pose.orientation.z = enuGlobalQ.z();
     // global_pose.pose.orientation.w = enuGlobalQ.w();
     ///////////////////////////////////////////////////////////////////////////////////
+
+  local_pose_with_covariance.header=local_pose.header;
+  local_pose_with_covariance.pose.pose=local_pose.pose;
+  local_pose_with_covariance.pose.covariance=msg->pose.covariance;
+    // Publish the transformed PoseWithCovarianceStamped message
   try{
     // global_odom_pub_->publish(global_pose);
-    local_odom_pub_->publish(local_pose);
+    local_odom_pub_->publish(local_pose_with_covariance);
     }
     catch (const std::exception &e) {
     std::cerr << "Caught a standard exception: " << e.what() << std::endl;

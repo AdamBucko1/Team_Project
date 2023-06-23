@@ -11,6 +11,7 @@
 #include <chrono>
 #include <memory>
 #include "interfaces/srv/reset_odom.hpp"
+#include <Eigen/Dense>
 
 class TfSubscriberNode: public rclcpp::Node // MODIFY NAME
 {
@@ -18,12 +19,12 @@ public:
     TfSubscriberNode();
  
 private:
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscription_;
     //std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_ ;
 
     void ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform);
     void global_odom_broadcast(const geometry_msgs::msg::TransformStamped& transform);
-    void tf_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    void tf_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
     void setup_subscriber();
     void base_camera_static_tf();
     void setup_global_local_transform();
@@ -35,7 +36,7 @@ private:
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response);
     rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv;
     
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr local_odom_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr local_odom_pub_;
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr global_odom_pub_;
 
 
