@@ -31,6 +31,9 @@ private:
     void reset_srv_handle();
     void GlobalOdom_pub();
     void LocalOdom_pub();
+    void trasformNWUToPoseENU(
+    const geometry_msgs::msg::TransformStamped &odom_tf,
+    geometry_msgs::msg::PoseStamped &local_pose); 
     void reset_odom_callback(
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response);

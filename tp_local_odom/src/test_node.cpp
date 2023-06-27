@@ -144,14 +144,8 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
   try {
       odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_link",tf2::TimePointZero, tf2::durationFromSec(0.041));
     } catch (tf2::TransformException &ex) {
-      // Handle exception if the transform is not available
-      // RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
       return;
     }
-    // global_local_tf.transform.rotation.x = 0;
-    // global_local_tf.transform.rotation.y = 0;
-    // global_local_tf.transform.rotation.z = 0;
-    // global_local_tf.transform.rotation.w = 1;
     odom_tf.header.stamp = this->now();
     odom_tf.header.frame_id = "global_map_link";
     odom_tf.child_frame_id = "drone_global";
@@ -161,23 +155,37 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
     global_odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_global",tf2::TimePointZero, tf2::durationFromSec(0.041));
     }
     catch (tf2::TransformException &ex) {
-      // Handle exception if the transform is not available
-      // RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
       return;
     }
-    // Position transformation from NWU to ENU
-    geometry_msgs::msg::PoseStamped local_pose;
-    geometry_msgs::msg::PoseWithCovarianceStamped local_pose_with_covariance;
-    geometry_msgs::msg::PoseStamped global_pose;
+  // Position transformation from NWU to ENU
+  geometry_msgs::msg::PoseStamped local_pose;
+  geometry_msgs::msg::PoseWithCovarianceStamped local_pose_with_covariance;
+  geometry_msgs::msg::PoseStamped global_pose;
 
-    local_pose.header.stamp = odom_tf.header.stamp;
-    local_pose.header.frame_id="map";
+  local_pose.header.stamp = odom_tf.header.stamp;
+  local_pose.header.frame_id="map";
 
-    global_pose.header.stamp = odom_tf.header.stamp;
-    global_pose.header.frame_id="map";
+  global_pose.header.stamp = odom_tf.header.stamp;
+  global_pose.header.frame_id="map";
 
+  trasformNWUToPoseENU(odom_tf,local_pose);
+  trasformNWUToPoseENU(global_odom_tf,global_pose);
+  local_pose_with_covariance.header=local_pose.header;
+  local_pose_with_covariance.pose.pose=local_pose.pose;
+  local_pose_with_covariance.pose.covariance=msg->pose.covariance;
+  try{
+    global_odom_pub_->publish(global_pose);
+    local_odom_pub_->publish(local_pose_with_covariance);
+    }
+  catch (const std::exception &e) {
+    std::cerr << "Caught a standard exception: " << e.what() << std::endl;
+    }
+}
 
-
+void TfSubscriberNode::trasformNWUToPoseENU(
+    const geometry_msgs::msg::TransformStamped &odom_tf,
+    geometry_msgs::msg::PoseStamped &local_pose) {
+    
     // Position transformation
     local_pose.pose.position.x = -odom_tf.transform.translation.y;
     local_pose.pose.position.y = odom_tf.transform.translation.x;
@@ -213,55 +221,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
     local_pose.pose.orientation.y = correctedQ.y();
     local_pose.pose.orientation.z = correctedQ.z();
     local_pose.pose.orientation.w = correctedQ.w();
-    /////////////////////////////////TF-NWU --> POSE-ENU/////////////////////////////////////////////////
-        // Position transformation
-    global_pose.pose.position.x = -global_odom_tf.transform.translation.y;
-    global_pose.pose.position.y = global_odom_tf.transform.translation.x;
-    global_pose.pose.position.z = last_range-0.075;
-
-    // Quaternion transformation
-    tf2::Quaternion globalQ(
-        global_odom_tf.transform.rotation.x,
-        global_odom_tf.transform.rotation.y,
-        global_odom_tf.transform.rotation.z,
-        global_odom_tf.transform.rotation.w
-    );
-    tf2::Quaternion enuGlobalQ = transformQ * globalQ;
-
-    // Swap roll and pitch
-    double roll_global, pitch_global, yaw_global;
-    tf2::Matrix3x3(enuGlobalQ).getRPY(roll_global, pitch_global, yaw_global);
-    double temp_global = roll_global;
-    roll_global = pitch_global;
-    pitch_global = temp_global;
-
-    // Add minus sign to roll
-    roll_global = -roll_global;
-
-    // Convert back to quaternion
-    tf2::Quaternion corrected_global_Q;
-    corrected_global_Q.setRPY(roll_global, pitch_global, yaw_global);
-
-
-    global_pose.pose.orientation.x = corrected_global_Q.x();
-    global_pose.pose.orientation.y = corrected_global_Q.y();
-    global_pose.pose.orientation.z = corrected_global_Q.z();
-    global_pose.pose.orientation.w = corrected_global_Q.w();
-    /////////////////////////////////////////////////////////////////////////////////
-
-  local_pose_with_covariance.header=local_pose.header;
-  local_pose_with_covariance.pose.pose=local_pose.pose;
-  local_pose_with_covariance.pose.covariance=msg->pose.covariance;
-    // Publish the transformed PoseWithCovarianceStamped message
-  try{
-    global_odom_pub_->publish(global_pose);
-    local_odom_pub_->publish(local_pose_with_covariance);
-    }
-    catch (const std::exception &e) {
-    std::cerr << "Caught a standard exception: " << e.what() << std::endl;
-    }
 }
-
 int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<TfSubscriberNode>();
