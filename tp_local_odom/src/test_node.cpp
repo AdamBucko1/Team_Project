@@ -213,33 +213,48 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
     local_pose.pose.orientation.y = correctedQ.y();
     local_pose.pose.orientation.z = correctedQ.z();
     local_pose.pose.orientation.w = correctedQ.w();
-    ///////////////////////////////////TF-NWU --> POSE-ENU/////////////////////////////////////////////////
-    //     // Position transformation
-    // global_pose.pose.position.x = -global_odom_tf.transform.translation.y;
-    // global_pose.pose.position.y = global_odom_tf.transform.translation.x;
-    // global_pose.pose.position.z = last_range;
+    /////////////////////////////////TF-NWU --> POSE-ENU/////////////////////////////////////////////////
+        // Position transformation
+    global_pose.pose.position.x = -global_odom_tf.transform.translation.y;
+    global_pose.pose.position.y = global_odom_tf.transform.translation.x;
+    global_pose.pose.position.z = last_range-0.075;
 
-    // // Quaternion transformation
-    // tf2::Quaternion globalQ(
-    //     global_odom_tf.transform.rotation.x,
-    //     global_odom_tf.transform.rotation.y,
-    //     global_odom_tf.transform.rotation.z,
-    //     global_odom_tf.transform.rotation.w
-    // );
-    // tf2::Quaternion enuGlobalQ = transformQ * globalQ;
+    // Quaternion transformation
+    tf2::Quaternion globalQ(
+        global_odom_tf.transform.rotation.x,
+        global_odom_tf.transform.rotation.y,
+        global_odom_tf.transform.rotation.z,
+        global_odom_tf.transform.rotation.w
+    );
+    tf2::Quaternion enuGlobalQ = transformQ * globalQ;
 
-    // global_pose.pose.orientation.x = enuGlobalQ.x();
-    // global_pose.pose.orientation.y = enuGlobalQ.y();
-    // global_pose.pose.orientation.z = enuGlobalQ.z();
-    // global_pose.pose.orientation.w = enuGlobalQ.w();
-    ///////////////////////////////////////////////////////////////////////////////////
+    // Swap roll and pitch
+    double roll_global, pitch_global, yaw_global;
+    tf2::Matrix3x3(enuGlobalQ).getRPY(roll_global, pitch_global, yaw_global);
+    double temp_global = roll_global;
+    roll_global = pitch_global;
+    pitch_global = temp_global;
+
+    // Add minus sign to roll
+    roll_global = -roll_global;
+
+    // Convert back to quaternion
+    tf2::Quaternion corrected_global_Q;
+    corrected_global_Q.setRPY(roll_global, pitch_global, yaw_global);
+
+
+    global_pose.pose.orientation.x = corrected_global_Q.x();
+    global_pose.pose.orientation.y = corrected_global_Q.y();
+    global_pose.pose.orientation.z = corrected_global_Q.z();
+    global_pose.pose.orientation.w = corrected_global_Q.w();
+    /////////////////////////////////////////////////////////////////////////////////
 
   local_pose_with_covariance.header=local_pose.header;
   local_pose_with_covariance.pose.pose=local_pose.pose;
   local_pose_with_covariance.pose.covariance=msg->pose.covariance;
     // Publish the transformed PoseWithCovarianceStamped message
   try{
-    // global_odom_pub_->publish(global_pose);
+    global_odom_pub_->publish(global_pose);
     local_odom_pub_->publish(local_pose_with_covariance);
     }
     catch (const std::exception &e) {
