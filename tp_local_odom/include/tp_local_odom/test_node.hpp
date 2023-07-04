@@ -31,6 +31,9 @@ private:
     void reset_srv_handle();
     void GlobalOdom_pub();
     void LocalOdom_pub();
+    void rotatePoseAroundAxis(geometry_msgs::msg::PoseStamped& pose, 
+                          const tf2::Vector3& axis, 
+                          double radians);
     void trasformNWUToPoseENU(
     const geometry_msgs::msg::TransformStamped &odom_tf,
     geometry_msgs::msg::PoseStamped &local_pose); 

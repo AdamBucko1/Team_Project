@@ -121,8 +121,8 @@ void TfSubscriberNode::base_camera_static_tf(){
     rotation_transform.header.frame_id = "camera_link";// // rename parent acording drone ardupilot frame
     rotation_transform.child_frame_id = "drone_link"; // rename to the 
     //   set translation of frame
-    rotation_transform.transform.translation.x = -0.13;  //-0.14425
-    rotation_transform.transform.translation.y = 0.0;
+    rotation_transform.transform.translation.x = -0.13;  //-0.14425 
+    rotation_transform.transform.translation.y = -0.061; //0
     rotation_transform.transform.translation.z = 0.0;
 
     // Set the rotation to a 90 degree roll around the X-axis
@@ -170,6 +170,9 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
 
   trasformNWUToPoseENU(odom_tf,local_pose);
   trasformNWUToPoseENU(global_odom_tf,global_pose);
+  rotatePoseAroundAxis(local_pose, tf2::Vector3(0.0, 0.0, 1.0), M_PI);
+  rotatePoseAroundAxis(global_pose, tf2::Vector3(0.0, 0.0, 1.0), M_PI);
+
   local_pose_with_covariance.header=local_pose.header;
   local_pose_with_covariance.pose.pose=local_pose.pose;
   local_pose_with_covariance.pose.covariance=msg->pose.covariance;
@@ -199,7 +202,7 @@ void TfSubscriberNode::trasformNWUToPoseENU(
         odom_tf.transform.rotation.w
     );
     tf2::Quaternion transformQ;
-    transformQ.setRPY(0, 0, -M_PI / 2);
+    transformQ.setRPY(0, 0, -M_PI);
 
     tf2::Quaternion enuLocalQ = transformQ * localQ;
 
@@ -208,7 +211,7 @@ void TfSubscriberNode::trasformNWUToPoseENU(
     tf2::Matrix3x3(enuLocalQ).getRPY(roll, pitch, yaw);
     double temp = roll;
     roll = pitch;
-    pitch = temp;
+    pitch = -temp;
 
     // Add minus sign to roll
     roll = -roll;
@@ -222,6 +225,33 @@ void TfSubscriberNode::trasformNWUToPoseENU(
     local_pose.pose.orientation.z = correctedQ.z();
     local_pose.pose.orientation.w = correctedQ.w();
 }
+
+void TfSubscriberNode::rotatePoseAroundAxis(geometry_msgs::msg::PoseStamped& pose, 
+                          const tf2::Vector3& axis, 
+                          double radians) {
+    // Convert pose orientation to tf2::Quaternion
+    tf2::Quaternion pose_quat;
+    tf2::fromMsg(pose.pose.orientation, pose_quat);
+
+    // Create a tf2::Transform from original pose
+    tf2::Transform orig_transform(pose_quat, 
+                                  tf2::Vector3(pose.pose.position.x, pose.pose.position.y, pose.pose.position.z));
+
+    // Define the rotation quaternion
+    tf2::Quaternion rot_quat(axis, radians);
+    
+    // Rotate original transform
+    tf2::Transform rot_transform(rot_quat);
+    tf2::Transform new_transform = rot_transform * orig_transform;
+    
+    // Modify the original PoseStamped
+    pose.pose.position.x = new_transform.getOrigin().x();
+    pose.pose.position.y = new_transform.getOrigin().y();
+    pose.pose.position.z = new_transform.getOrigin().z();
+    pose.pose.orientation = tf2::toMsg(new_transform.getRotation());
+}
+
+
 int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<TfSubscriberNode>();
