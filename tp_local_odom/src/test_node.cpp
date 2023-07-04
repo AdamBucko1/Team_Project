@@ -127,7 +127,7 @@ void TfSubscriberNode::base_camera_static_tf(){
 
     // Set the rotation to a 90 degree roll around the X-axis
     tf2::Quaternion rotation_quaternion;
-    rotation_quaternion.setRPY(0, 0.0, 0.0); // 90 degree roll around the X-axis
+    rotation_quaternion.setRPY(0, 0.0, 0.0);
     rotation_transform.transform.rotation = tf2::toMsg(rotation_quaternion);
     tf_broadcaster_.sendTransform(rotation_transform);
 }
@@ -149,7 +149,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
     odom_tf.header.stamp = this->now();
     odom_tf.header.frame_id = "global_map_link";
     odom_tf.child_frame_id = "drone_global";
-    tf_broadcaster_.sendTransform(odom_tf);
+    tf_broadcaster_.sendTransform(odom_tf); 
 
   try {
     global_odom_tf = TfSubscriberNode::tf_buffer_.lookupTransform( "map","drone_global",tf2::TimePointZero, tf2::durationFromSec(0.041));
@@ -170,6 +170,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
 
   trasformNWUToPoseENU(odom_tf,local_pose);
   trasformNWUToPoseENU(global_odom_tf,global_pose);
+
   rotatePoseAroundAxis(local_pose, tf2::Vector3(0.0, 0.0, 1.0), M_PI);
   rotatePoseAroundAxis(global_pose, tf2::Vector3(0.0, 0.0, 1.0), M_PI);
 
@@ -201,23 +202,28 @@ void TfSubscriberNode::trasformNWUToPoseENU(
         odom_tf.transform.rotation.z,
         odom_tf.transform.rotation.w
     );
-    tf2::Quaternion transformQ;
-    transformQ.setRPY(0, 0, -M_PI);
+    double roll, pitch, yaw, temp;
+    tf2::Matrix3x3(localQ).getRPY(roll, pitch, yaw);
+    temp=roll;
+    roll=-pitch;
+    pitch=temp;
+    // //Represents the orientation of camera based on the front of the dorne
+    // tf2::Quaternion transformQ;
+    // transformQ.setRPY(0, 0, -M_PI);
+    // tf2::Quaternion enuLocalQ = transformQ * localQ;
 
-    tf2::Quaternion enuLocalQ = transformQ * localQ;
+    // // Swap roll and pitch
+    // double roll, pitch, yaw;
+    // tf2::Matrix3x3(enuLocalQ).getRPY(roll, pitch, yaw);
+    // double temp = roll;
+    // roll = pitch;
+    // pitch = -temp;
 
-    // Swap roll and pitch
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(enuLocalQ).getRPY(roll, pitch, yaw);
-    double temp = roll;
-    roll = pitch;
-    pitch = -temp;
-
-    // Add minus sign to roll
-    roll = -roll;
+    // roll = -roll;
 
     // Convert back to quaternion
     tf2::Quaternion correctedQ;
+    
     correctedQ.setRPY(roll, pitch, yaw);
 
     local_pose.pose.orientation.x = correctedQ.x();
