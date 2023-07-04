@@ -125,9 +125,9 @@ void TfSubscriberNode::base_camera_static_tf(){
     rotation_transform.transform.translation.y = -0.061; //0
     rotation_transform.transform.translation.z = 0.0;
 
-    // Set the rotation to a 90 degree roll around the X-axis
+    // Camera is is mounted on back meaning its rotated 180 from the drone's heading
     tf2::Quaternion rotation_quaternion;
-    rotation_quaternion.setRPY(0, 0.0, 0.0);
+    rotation_quaternion.setRPY(0, 0.0, M_PI);
     rotation_transform.transform.rotation = tf2::toMsg(rotation_quaternion);
     tf_broadcaster_.sendTransform(rotation_transform);
 }
@@ -171,6 +171,7 @@ void TfSubscriberNode::tf_callback(const geometry_msgs::msg::PoseWithCovarianceS
   trasformNWUToPoseENU(odom_tf,local_pose);
   trasformNWUToPoseENU(global_odom_tf,global_pose);
 
+  //Camera is backwards
   rotatePoseAroundAxis(local_pose, tf2::Vector3(0.0, 0.0, 1.0), M_PI);
   rotatePoseAroundAxis(global_pose, tf2::Vector3(0.0, 0.0, 1.0), M_PI);
 
