@@ -1,86 +1,84 @@
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/static_transform_broadcaster.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+
+#include <Eigen/Dense>
+#include <chrono>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <interfaces/srv/reset_odom.hpp>
+#include <memory>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/range.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/transform_broadcaster.h>
-#include <tf2_ros/static_transform_broadcaster.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2_ros/buffer.h>
-#include <chrono>
-#include <memory>
-#include "interfaces/srv/reset_odom.hpp"
-#include <Eigen/Dense>
 
-class TfSubscriberNode: public rclcpp::Node // MODIFY NAME
-{
-public:
-    TfSubscriberNode();
- 
-private:
-    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr subscription_;
-    //std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_ ;
+class PoseRepublisher : public rclcpp::Node {
+ public:
+  PoseRepublisher();
 
-    void ardupilot_frame_broadcaster(const geometry_msgs::msg::TransformStamped& transform);
-    void global_odom_broadcast(const geometry_msgs::msg::TransformStamped& transform);
-    void tf_callback(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
-    void setup_subscriber();
-    void base_camera_static_tf();
-    void setup_global_local_transform();
-    void reset_srv_handle();
-    void GlobalOdom_pub();
-    void LocalOdom_pub();
-    void rotatePoseAroundAxis(geometry_msgs::msg::PoseStamped& pose, 
-                          const tf2::Vector3& axis, 
-                          double radians);
-    void trasformNWUToPoseENU(
-    const geometry_msgs::msg::TransformStamped &odom_tf,
-    geometry_msgs::msg::PoseStamped &local_pose); 
-    void reset_odom_callback(
+ private:
+  // Methods
+  void RotatePoseAroundAxis(geometry_msgs::msg::PoseStamped &pose,
+                            const tf2::Vector3 &axis, double angle);
+  void GlobalOdomBroadcast(
+      const geometry_msgs::msg::TransformStamped &transform);
+  void TransformNWUToPoseENU(
+      const geometry_msgs::msg::TransformStamped &odom_tf,
+      geometry_msgs::msg::PoseStamped &local_pose);
+  void BaseCameraStaticTF();
+  void SetupGlobalTransform();
+  void DefaultValues();
+  void StartFunctions();
+
+  // Variables
+  double rangefinder_vis_range_info_;
+  double range_visual_;
+  double corrected_range_;
+  double last_range_;
+  double rangefinder_offset_;
+  double camera_offset_x_;
+  double camera_offset_y_;
+  double camera_offset_z_;
+  double camera_rotation_;  // Radians
+
+  // TF variables
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
+  tf2_ros::StaticTransformBroadcaster tf_broadcaster_;
+
+  // Class output variables
+  geometry_msgs::msg::PoseStamped local_pose_;
+  geometry_msgs::msg::PoseWithCovarianceStamped local_pose_with_covariance_;
+  geometry_msgs::msg::PoseStamped global_pose_;
+  geometry_msgs::msg::TransformStamped global_local_tf_;
+
+  // Subscribers
+  void PoseVisualSub();
+  rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+      pose_visual_sub_;
+  void CallbackVisualOdom(
+      const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+
+  void RangefinderSub();
+  rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr rangefinder_sub_;
+  void CallbackRangefinder(const sensor_msgs::msg::Range::SharedPtr msg);
+
+  // Publishers
+  void LocalOdomPub();
+  rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr
+      local_odom_pub_;
+
+  void GlobalOdomPub();
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr
+      global_odom_pub_;
+
+  // Services
+  void ResetSrvHandle();
+  rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv_;
+
+  void ResetOdomCallback(
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response);
-    rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv;
-    
-    rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr local_odom_pub_;
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr global_odom_pub_;
-
-
-
-    tf2_ros::Buffer tf_buffer_;
-    tf2_ros::TransformListener tf_listener_;
-
-   
-
-
-
-
-
-    geometry_msgs::msg::TransformStamped global_local_tf;
-    tf2_ros::StaticTransformBroadcaster tf_broadcaster_;
-    std::string target_frame;
-    double rangefinder_vis_range_info=0;
-    double range_visual=0;
-    double corrected_range=0;
-    double last_range=0;
-    void Rangefinder_sub();
-    void VisualOdom_sub();
-
-    void update_odometry();
-    void InitListener();
-    void broadcast_frame();
-    nav_msgs::msg::Odometry translate_odometry(nav_msgs::msg::Odometry::SharedPtr msg, double x, double y, double z);
-    nav_msgs::msg::Odometry rotate_odometry(nav_msgs::msg::Odometry::SharedPtr msg);
-
-
-
-      
-    void callback_rangefinder(const sensor_msgs::msg::Range::SharedPtr msg);
-    void callback_visual_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
-
-    rclcpp::Subscription<sensor_msgs::msg::Range>::SharedPtr rangefinder_sub_;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr visual_odom_sub_;
-
-
 };
-
