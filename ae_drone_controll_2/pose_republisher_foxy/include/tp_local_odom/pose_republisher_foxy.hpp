@@ -77,7 +77,6 @@ class PoseRepublisher : public rclcpp::Node {
   // Services
   void ResetSrvHandle();
   rclcpp::Service<interfaces::srv::ResetOdom>::SharedPtr reset_odom_srv_;
-
   void ResetOdomCallback(
       const std::shared_ptr<interfaces::srv::ResetOdom::Request> request,
       std::shared_ptr<interfaces::srv::ResetOdom::Response> response);

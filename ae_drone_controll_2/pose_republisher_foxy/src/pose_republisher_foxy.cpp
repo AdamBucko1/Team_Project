@@ -107,22 +107,6 @@ void PoseRepublisher::ResetOdomCallback(
       RCLCPP_ERROR_STREAM(rclcpp::get_logger("tf2_example"), ex.what());
       return;
     }
-    // tf2::Quaternion rotation_quaternion;
-    // rotation_quaternion.setRPY(0.0, 0.0, M_PI);
-
-    // tf2::Quaternion rotated_orientation =
-    //     rotation_quaternion *
-    //     tf2::Quaternion(global_local_tf_.transform.rotation.x,
-    //                     global_local_tf_.transform.rotation.y,
-    //                     global_local_tf_.transform.rotation.z,
-    //                     global_local_tf_.transform.rotation.w);
-    // rotated_orientation.normalize();
-
-    // global_local_tf_.transform.rotation.x = rotated_orientation.x();
-    // global_local_tf_.transform.rotation.y = rotated_orientation.y();
-    // global_local_tf_.transform.rotation.z = rotated_orientation.z();
-    // global_local_tf_.transform.rotation.w = rotated_orientation.w();
-
     global_local_tf_.header.stamp = this->now();
     global_local_tf_.header.frame_id = "map";
     global_local_tf_.child_frame_id = "global_map_link";
@@ -205,7 +189,9 @@ void PoseRepublisher::GlobalOdomBroadcast(
 
 /**
  * @brief Callback function for processing visual SLAM pose with covariance
- * messages.
+ * messages. Transforms the transform got from lookupTransform into correct
+ * coordinate frame. Also Constructs poses which will be published. Function
+ * acounts for the rotation of the camera.
  * @param msg The received pose with covariance message.
  */
 void PoseRepublisher::CallbackVisualOdom(
@@ -240,7 +226,7 @@ void PoseRepublisher::CallbackVisualOdom(
   TransformNWUToPoseENU(odom_tf, local_pose_);
   TransformNWUToPoseENU(global_odom_tf, global_pose_);
 
-  // Camera is backwards
+  // Rotation based on cameras orientation
   RotatePoseAroundAxis(local_pose_, tf2::Vector3(0.0, 0.0, 1.0),
                        camera_rotation_);
   RotatePoseAroundAxis(global_pose_, tf2::Vector3(0.0, 0.0, 1.0),
